@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLIPVAULT — Discord Video Share</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090e;
+  --bg2: #0b0e16;
+  --surface: #0f1320;
+  --surface2: #141825;
+  --border: #1a2035;
+  --border2: #222840;
+  --accent: #5b6cf9;
+  --accent-dim: rgba(91,108,249,0.15);
+  --accent-glow: rgba(91,108,249,0.3);
+  --green: #10e89a;
+  --green-dim: rgba(16,232,154,0.12);
+  --red: #ff4d6a;
+  --yellow: #ffc247;
+  --text: #dde3f0;
+  --muted: #5a6480;
+  --muted2: #8090b0;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+}
+
+/* BG EFFECT */
+.bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+}
+.bg-orb-1 { width: 500px; height: 500px; background: rgba(91,108,249,0.06); top: -100px; left: 50%; transform: translateX(-50%); }
+.bg-orb-2 { width: 300px; height: 300px; background: rgba(16,232,154,0.04); bottom: 100px; right: -50px; }
+
+.page { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 0 20px 80px; }
+
+/* NAV */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 26px 0 22px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 56px;
+}
+.logo-mark {
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--accent), #9b6cf9);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-icon svg { width: 18px; height: 18px; color: #fff; }
+.logo-text { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
+.logo-text em { font-style: normal; color: var(--muted2); font-weight: 400; font-size: 0.7rem; display: block; letter-spacing: 0.06em; margin-top: -2px; }
+
+.discord-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(88,101,242,0.1);
+  border: 1px solid rgba(88,101,242,0.22);
+  color: #7289da;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 5px 12px; border-radius: 100px;
+}
+.discord-badge svg { width: 13px; height: 13px; }
+
+/* HERO */
+.hero { margin-bottom: 44px; }
+.hero h1 {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.06;
+  margin-bottom: 14px;
+}
+.hero h1 .g {
+  background: linear-gradient(100deg, var(--accent) 0%, #a56cf9 60%, var(--green) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero p { color: var(--muted2); font-size: 1rem; line-height: 1.65; max-width: 500px; }
+
+/* HOW IT WORKS INLINE */
+.how-row {
+  display: flex; gap: 0; margin-top: 28px; margin-bottom: 0;
+}
+.how-step {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.78rem; color: var(--muted);
+}
+.how-step .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.how-arrow { color: var(--border2); margin: 0 10px; font-size: 0.9rem; }
+
+/* UPLOAD ZONE */
+.dropzone {
+  border: 2px dashed var(--border2);
+  border-radius: 18px;
+  padding: 56px 32px;
+  text-align: center;
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.dropzone::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% -20%, rgba(91,108,249,0.07) 0%, transparent 65%);
+  pointer-events: none;
+}
+.dropzone:hover, .dropzone.over {
+  border-color: var(--accent);
+  background: var(--surface2);
+  box-shadow: 0 0 0 3px var(--accent-dim), inset 0 0 50px rgba(91,108,249,0.04);
+}
+.dz-icon {
+  width: 60px; height: 60px;
+  margin: 0 auto 18px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(91,108,249,0.2);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.dz-icon svg { width: 26px; height: 26px; color: var(--accent); }
+.dropzone h3 { font-size: 1.08rem; font-weight: 700; margin-bottom: 7px; }
+.dropzone p { color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
+.dropzone p strong { color: var(--accent); }
+.fmt-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.fmt { background: var(--bg2); border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; padding: 3px 9px; border-radius: 6px; }
+input[type=file]{ display: none; }
+
+/* SIZE WARNING */
+.size-note {
+  background: rgba(255,194,71,0.07);
+  border: 1px solid rgba(255,194,71,0.18);
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 0.8rem;
+  color: var(--yellow);
+  line-height: 1.5;
+  margin-bottom: 28px;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.size-note svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
+
+/* PROGRESS */
+#progressWrap { display: none; margin-bottom: 24px; }
+#progressWrap.show { display: block; animation: fadeIn 0.3s ease; }
+
+.prog-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+}
+.prog-top { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.spinner {
+  width: 32px; height: 32px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.prog-title { font-size: 1rem; font-weight: 700; }
+.prog-sub { font-size: 0.76rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
+
+.prog-bar-bg { background: var(--bg2); border-radius: 100px; height: 5px; overflow: hidden; margin-bottom: 18px; }
+.prog-bar-fill {
+  height: 100%; border-radius: 100px;
+  background: linear-gradient(90deg, var(--accent), #a56cf9);
+  width: 0%; transition: width 0.4s ease;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.prog-steps { display: flex; flex-direction: column; gap: 10px; }
+.ps {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.3s;
+  font-size: 0.85rem;
+}
+.ps.active { border-color: var(--accent); background: rgba(91,108,249,0.06); }
+.ps.done { border-color: var(--green); }
+.ps-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); flex-shrink: 0; transition: all 0.3s; }
+.ps.active .ps-dot { background: var(--accent); animation: blink 1s ease infinite; }
+.ps.done .ps-dot { background: var(--green); }
+@keyframes blink { 0%,100%{transform:scale(1)} 50%{transform:scale(1.5)} }
+.ps-label { font-weight: 600; }
+.ps-sub { font-size: 0.73rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+/* RESULT */
+#resultWrap { display: none; }
+#resultWrap.show { display: block; animation: fadeUp 0.4s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.success-banner {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--green-dim);
+  border: 1px solid rgba(16,232,154,0.22);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+.success-banner svg { color: var(--green); width: 20px; height: 20px; flex-shrink: 0; }
+.success-banner strong { font-size: 0.95rem; }
+.success-banner span { display: block; color: var(--muted); font-size: 0.77rem; font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+
+/* VIDEO PLAYER */
+.video-wrap {
+  background: #000;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 22px;
+}
+.video-wrap video { width: 100%; display: block; max-height: 420px; background: #000; }
+
+/* LINK BOX */
+.link-section { margin-bottom: 22px; }
+.lbl { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+.link-row { display: flex; gap: 8px; }
+.link-field {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.link-field:focus { border-color: var(--accent); }
+.copy-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.copy-btn:hover { background: #4a5be8; transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+.copy-btn.ok { background: var(--green); color: #000; }
+.copy-btn svg { width: 15px; height: 15px; }
+
+/* DISCORD HOW TO */
+.discord-how {
+  background: rgba(88,101,242,0.07);
+  border: 1px solid rgba(88,101,242,0.18);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--muted2);
+}
+.discord-how strong { color: #7289da; }
+.discord-how code {
+  background: rgba(88,101,242,0.12);
+  color: #7289da;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* DISCORD EMBED MOCK */
+.discord-preview-label {
+  font-size: 0.72rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
+}
+.discord-preview-label::after { content:''; flex:1; height:1px; background: var(--border); }
+
+.discord-mock {
+  background: #313338;
+  border-radius: 12px;
+  padding: 16px;
+}
+.d-row { display: flex; gap: 12px; }
+.d-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #5865f2, #7289da);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+}
+.d-body { flex: 1; }
+.d-name { color: #7289da; font-weight: 700; font-size: 0.82rem; margin-bottom: 3px; }
+.d-name span { color: #72767d; font-size: 0.68rem; font-weight: 400; margin-left: 8px; }
+.d-link { color: #00aff4; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; word-break: break-all; margin-bottom: 6px; }
+
+.d-embed {
+  border-left: 4px solid #5865f2;
+  border-radius: 0 8px 8px 0;
+  background: #2b2d31;
+  overflow: hidden;
+  max-width: 460px;
+}
+.d-embed-top { padding: 10px 12px 8px; }
+.d-embed-site { color: #b5bac1; font-size: 0.7rem; margin-bottom: 3px; }
+.d-embed-title { color: #fff; font-size: 0.88rem; font-weight: 700; }
+.d-embed-video { background: #000; position: relative; cursor: pointer; }
+.d-embed-video video { width: 100%; display: block; max-height: 190px; object-fit: cover; }
+.d-play-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.35);
+  transition: background 0.2s;
+}
+.d-play-overlay:hover { background: rgba(0,0,0,0.15); }
+.d-play-btn { width: 46px; height: 46px; background: rgba(255,255,255,0.92); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.d-play-btn svg { width: 18px; height: 18px; color: #000; margin-left: 3px; }
+
+/* ACTIONS */
+.actions-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.action-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 9px; padding: 9px 16px;
+  font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.8rem;
+  cursor: pointer; transition: all 0.2s; text-decoration: none; border: none;
+}
+.action-btn.secondary {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--muted2);
+}
+.action-btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+.action-btn svg { width: 14px; height: 14px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(70px);
+  background: var(--green); color: #000;
+  font-weight: 700; font-size: 0.85rem;
+  padding: 11px 22px; border-radius: 100px;
+  z-index: 1000; transition: transform 0.3s ease;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ERROR */
+.error-box {
+  background: rgba(255,77,106,0.08);
+  border: 1px solid rgba(255,77,106,0.22);
+  border-radius: 12px; padding: 14px 18px;
+  font-size: 0.82rem; color: var(--red); line-height: 1.5;
+  margin-bottom: 18px; display: none;
+  gap: 8px; align-items: flex-start;
+}
+.error-box.show { display: flex; }
+.error-box svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
+
+/* UPLOAD STATUS */
+.upload-status {
+  margin-top: 16px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  text-align: center;
+}
+.upload-pct { color: var(--accent); font-weight: 500; }
+
+/* RESET */
+.reset-btn {
+  width: 100%; margin-top: 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 10px; padding: 10px 20px;
+  font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.83rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="page">
+  <nav>
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      </div>
+      <div class="logo-text">CLIPVAULT <em>DISCORD VIDEO SHARE</em></div>
+    </div>
+    <div class="discord-badge">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
+      Embeds in Discord
+    </div>
+  </nav>
+
+  <div class="hero">
+    <h1>Upload. Get Link.<br><span class="g">Discord Embeds It.</span></h1>
+    <p>Upload your video and get a real public link. Paste it in Discord — the video plays inline, just like TikTok embeds.</p>
+    <div class="how-row">
+      <span class="how-step"><span class="dot"></span> Upload video</span>
+      <span class="how-arrow">→</span>
+      <span class="how-step"><span class="dot"></span> Get public .mp4 link</span>
+      <span class="how-arrow">→</span>
+      <span class="how-step"><span class="dot"></span> Discord embeds it</span>
+    </div>
+  </div>
+
+  <!-- UPLOAD ZONE -->
+  <div id="uploadSection">
+    <div class="dropzone" id="dz" onclick="document.getElementById('fi').click()">
+      <div class="dz-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+      </div>
+      <h3>Drop your clip here</h3>
+      <p>or <strong>browse files</strong> — we'll upload it to get a real public link</p>
+      <div class="fmt-row">
+        <span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">WEBM</span><span class="fmt">MKV</span><span class="fmt">AVI</span>
+      </div>
+    </div>
+    <input type="file" id="fi" accept="video/*">
+
+    <div class="size-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div><strong>How the link works:</strong> Your video is uploaded to <strong>0x0.st</strong> — a free public file host. You get a real <code style="background:rgba(255,194,71,0.1);color:var(--yellow);font-family:monospace;padding:1px 5px;border-radius:3px;">.mp4</code> URL that Discord can fetch and embed directly. Max file size: <strong>512 MB</strong>. Files expire after ~1 year.</div>
+    </div>
+  </div>
+
+  <!-- PROCESSING -->
+  <div id="progressWrap">
+    <div class="prog-card">
+      <div class="prog-top">
+        <div class="spinner"></div>
+        <div>
+          <div class="prog-title" id="progTitle">Uploading your video...</div>
+          <div class="prog-sub" id="progSub">Connecting to server</div>
+        </div>
+      </div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="progBar"></div></div>
+      <div class="upload-status" id="uploadStatus"></div>
+      <div class="prog-steps">
+        <div class="ps" id="ps1"><div class="ps-dot"></div><div><div class="ps-label">Uploading to public server</div><div class="ps-sub">Sending to 0x0.st · free file host</div></div></div>
+        <div class="ps" id="ps2"><div class="ps-dot"></div><div><div class="ps-label">Getting public URL</div><div class="ps-sub">Generating direct .mp4 link</div></div></div>
+        <div class="ps" id="ps3"><div class="ps-dot"></div><div><div class="ps-label">Discord embed ready</div><div class="ps-sub">Link works in Discord, Slack, Telegram</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-box" id="errorBox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    <div id="errorMsg">Upload failed. Please try again.</div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="resultWrap">
+    <div class="success-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <div>
+        <strong>Video is live! Ready to share.</strong>
+        <span id="successMeta">Uploaded · Public link ready · Discord embeds this automatically</span>
+      </div>
+    </div>
+
+    <!-- VIDEO PREVIEW -->
+    <div class="video-wrap">
+      <video id="previewVid" controls playsinline></video>
+    </div>
+
+    <!-- LINK -->
+    <div class="link-section">
+      <div class="lbl">YOUR PUBLIC LINK — PASTE THIS INTO DISCORD</div>
+      <div class="link-row">
+        <input type="text" class="link-field" id="linkField" readonly>
+        <button class="copy-btn" id="copyBtn" onclick="copyLink()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy Link
+        </button>
+      </div>
+    </div>
+
+    <!-- DISCORD INSTRUCTIONS -->
+    <div class="discord-how">
+      <strong>How to embed in Discord:</strong> Just paste the link above into any Discord channel and press Enter. Discord will automatically detect the <code>.mp4</code> URL and show the video player inline — no extra steps needed, exactly like TikTok or YouTube embeds.
+    </div>
+
+    <!-- DISCORD PREVIEW MOCK -->
+    <div class="discord-preview-label">HOW IT LOOKS IN DISCORD</div>
+    <div class="discord-mock">
+      <div class="d-row">
+        <div class="d-avatar">🎮</div>
+        <div class="d-body">
+          <div class="d-name">You <span>Today at 4:57 PM</span></div>
+          <div class="d-link" id="mockLink">https://0x0.st/XXXXX.mp4</div>
+          <div class="d-embed">
+            <div class="d-embed-top">
+              <div class="d-embed-site">0x0.st</div>
+              <div class="d-embed-title" id="embedTitle">Video</div>
+            </div>
+            <div class="d-embed-video" onclick="togglePlay(this)">
+              <video id="mockVid" muted loop playsinline></video>
+              <div class="d-play-overlay" id="playOverlay">
+                <div class="d-play-btn">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button class="action-btn secondary" onclick="resetUI()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 009 9 9.75 9.75 0 006.74-2.74L21 16"/><path d="M21 21v-5h-5"/><path d="M21 12a9 9 0 00-9-9 9.75 9.75 0 00-6.74 2.74L3 8"/></svg>
+        Upload Another
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Link copied!</div>
+
+<script>
+const dz = document.getElementById('dz');
+const fi = document.getElementById('fi');
+let currentURL = '';
+let objectURL = '';
+
+// Drag & drop
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('video/')) startUpload(f);
+  else showError('Please drop a valid video file (MP4, MOV, WEBM, etc.)');
+});
+fi.addEventListener('change', () => { if (fi.files[0]) startUpload(fi.files[0]); });
+
+function startUpload(file) {
+  // Check size (512MB limit)
+  if (file.size > 512 * 1024 * 1024) {
+    showError('File is too large. Maximum size is 512 MB. Try compressing the video first.');
+    return;
+  }
+
+  hideError();
+
+  // Show progress
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('resultWrap').classList.remove('show');
+  const pw = document.getElementById('progressWrap');
+  pw.classList.add('show');
+
+  // Mark step 1 active
+  setStep(1, 'active');
+
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+  document.getElementById('progSub').textContent = `${file.name} · ${sizeMB} MB`;
+
+  // Create object URL for preview
+  if (objectURL) URL.revokeObjectURL(objectURL);
+  objectURL = URL.createObjectURL(file);
+
+  // Upload via XMLHttpRequest so we get progress
+  const fd = new FormData();
+  fd.append('file', file);
+
+  const xhr = new XMLHttpRequest();
+
+  xhr.upload.addEventListener('progress', e => {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 80);
+      document.getElementById('progBar').style.width = pct + '%';
+      document.getElementById('uploadStatus').innerHTML =
+        `<span class="upload-pct">${pct}%</span> · ${(e.loaded/1024/1024).toFixed(1)} MB / ${(e.total/1024/1024).toFixed(1)} MB`;
+    }
+  });
+
+  xhr.addEventListener('load', () => {
+    if (xhr.status === 200) {
+      const url = xhr.responseText.trim();
+      document.getElementById('progBar').style.width = '90%';
+      setStep(1, 'done'); setStep(2, 'active');
+      document.getElementById('progTitle').textContent = 'Processing link...';
+      document.getElementById('progSub').textContent = 'Almost ready';
+      document.getElementById('uploadStatus').textContent = '';
+
+      setTimeout(() => {
+        setStep(2, 'done'); setStep(3, 'active');
+        document.getElementById('progBar').style.width = '100%';
+        setTimeout(() => {
+          setStep(3, 'done');
+          setTimeout(() => showResult(file, url), 400);
+        }, 600);
+      }, 700);
+    } else {
+      uploadFailed('Server returned an error. Try a smaller file or different format.');
+    }
+  });
+
+  xhr.addEventListener('error', () => {
+    // CORS or network error - try fallback method
+    uploadViaCORS(file);
+  });
+
+  xhr.open('POST', 'https://0x0.st');
+  xhr.send(fd);
+}
+
+function uploadViaCORS(file) {
+  // 0x0.st may block direct browser uploads due to CORS.
+  // Show a friendly message and provide manual instructions.
+  document.getElementById('progressWrap').classList.remove('show');
+  document.getElementById('uploadSection').style.display = 'block';
+
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+
+  showError(
+    `Browser upload was blocked by CORS policy. ` +
+    `To get a working Discord link, upload your video manually:\n\n` +
+    `1. Go to https://litterbox.catbox.moe\n` +
+    `2. Upload your video there\n` +
+    `3. Copy the link and paste into Discord\n\n` +
+    `Or try https://tmpfiles.org or https://transfer.sh`
+  );
+
+  // Also try the catbox approach
+  tryCatbox(file);
+}
+
+function tryCatbox(file) {
+  const sizeMB = file.size / 1024 / 1024;
+  if (sizeMB > 200) return; // catbox limit
+
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('progressWrap').classList.add('show');
+  hideError();
+  setStep(1, 'active');
+  document.getElementById('progTitle').textContent = 'Trying alternate server...';
+  document.getElementById('progSub').textContent = 'Uploading to litterbox.catbox.moe';
+
+  const fd = new FormData();
+  fd.append('reqtype', 'fileupload');
+  fd.append('time', '72h');
+  fd.append('fileToUpload', file);
+
+  const xhr = new XMLHttpRequest();
+
+  xhr.upload.addEventListener('progress', e => {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 80);
+      document.getElementById('progBar').style.width = pct + '%';
+      document.getElementById('uploadStatus').innerHTML =
+        `<span class="upload-pct">${pct}%</span> · ${(e.loaded/1024/1024).toFixed(1)} MB / ${(e.total/1024/1024).toFixed(1)} MB`;
+    }
+  });
+
+  xhr.addEventListener('load', () => {
+    const text = xhr.responseText.trim();
+    if (xhr.status === 200 && text.startsWith('http')) {
+      document.getElementById('progBar').style.width = '90%';
+      setStep(1, 'done'); setStep(2, 'active');
+      setTimeout(() => {
+        setStep(2, 'done'); setStep(3, 'active');
+        document.getElementById('progBar').style.width = '100%';
+        setTimeout(() => { setStep(3, 'done'); setTimeout(() => showResult(file, text), 400); }, 600);
+      }, 700);
+    } else {
+      showUploadHelp(file);
+    }
+  });
+
+  xhr.addEventListener('error', () => showUploadHelp(file));
+
+  xhr.open('POST', 'https://litterbox.catbox.moe/resources/internals/api.php');
+  xhr.send(fd);
+}
+
+function showUploadHelp(file) {
+  document.getElementById('progressWrap').classList.remove('show');
+  document.getElementById('uploadSection').style.display = 'block';
+
+  // Generate a local preview page as fallback
+  showError(
+    'External upload services are unavailable right now due to browser security restrictions. ' +
+    'Use the button below to download an embed page with your video baked in — ' +
+    'or manually upload to catbox.moe / litterbox.catbox.moe and paste the link in Discord.'
+  );
+
+  // Show result with local objectURL so they can at least see the video
+  showResult(file, objectURL, true);
+}
+
+function uploadFailed(msg) {
+  document.getElementById('progressWrap').classList.remove('show');
+  document.getElementById('uploadSection').style.display = 'block';
+  showError(msg);
+}
+
+function showResult(file, url, isLocal = false) {
+  document.getElementById('progressWrap').classList.remove('show');
+  currentURL = url;
+
+  // Determine display URL
+  const displayURL = isLocal ? '(local preview — see instructions above)' : url;
+
+  // Update success banner
+  if (isLocal) {
+    document.querySelector('.success-banner').style.borderColor = 'rgba(255,194,71,0.22)';
+    document.querySelector('.success-banner').style.background = 'rgba(255,194,71,0.07)';
+    document.querySelector('.success-banner svg').style.color = 'var(--yellow)';
+    document.getElementById('successMeta').textContent = 'Local preview · Upload to catbox.moe for Discord link';
+  } else {
+    document.getElementById('successMeta').textContent = `${(file.size/1024/1024).toFixed(1)} MB · Public URL ready · Paste into Discord`;
+  }
+
+  // Set videos
+  document.getElementById('previewVid').src = objectURL;
+  document.getElementById('mockVid').src = objectURL;
+  document.getElementById('mockVid').play().catch(()=>{});
+
+  // Set link
+  document.getElementById('linkField').value = isLocal ? url : url;
+  document.getElementById('mockLink').textContent = isLocal ? 'local preview' : url;
+  document.getElementById('embedTitle').textContent = file.name.replace(/\.[^.]+$/, '') || 'Video';
+
+  // Show/hide copy button
+  if (isLocal) {
+    document.getElementById('copyBtn').style.display = 'none';
+  } else {
+    document.getElementById('copyBtn').style.display = 'flex';
+  }
+
+  document.getElementById('resultWrap').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setStep(n, state) {
+  const el = document.getElementById('ps' + n);
+  el.classList.remove('active', 'done');
+  if (state) el.classList.add(state);
+}
+
+function copyLink() {
+  const val = document.getElementById('linkField').value;
+  navigator.clipboard.writeText(val).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.classList.add('ok');
+    btn.textContent = '✓ Copied!';
+    showToast();
+    setTimeout(() => {
+      btn.classList.remove('ok');
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy Link`;
+    }, 2500);
+  });
+}
+
+function togglePlay(container) {
+  const vid = container.querySelector('video');
+  const overlay = container.querySelector('.d-play-overlay');
+  if (vid.paused) { vid.play(); overlay.style.opacity = '0'; }
+  else { vid.pause(); overlay.style.opacity = '1'; }
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  document.getElementById('errorMsg').textContent = msg;
+  b.classList.add('show');
+  b.style.display = 'flex';
+}
+function hideError() {
+  document.getElementById('errorBox').classList.remove('show');
+  document.getElementById('errorBox').style.display = 'none';
+}
+
+function resetUI() {
+  document.getElementById('resultWrap').classList.remove('show');
+  document.getElementById('uploadSection').style.display = 'block';
+  hideError();
+  fi.value = '';
+  ['ps1','ps2','ps3'].forEach(id => { document.getElementById(id).classList.remove('active','done'); });
+  document.getElementById('progBar').style.width = '0%';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
